@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Banker's Algorithm Demo</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 2rem;
+      background-color: #f0f0f5;
+    }
+    h1, h2 {
+      color: #333;
+    }
+    input, textarea {
+      width: 100%;
+      margin-bottom: 1rem;
+      padding: 0.5rem;
+    }
+    button {
+      padding: 0.5rem 1rem;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    pre {
+      background: #eee;
+      padding: 1rem;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Banker's Algorithm Demo</h1>
+
+  <h2>Input</h2>
+  <p><strong>Enter matrices as rows separated by newlines, and numbers separated by spaces.</strong></p>
+
+  <label>Available (e.g. 3 3 2):</label>
+  <input type="text" id="available" placeholder="e.g. 3 3 2">
+
+  <label>Max Matrix:</label>
+  <textarea id="max" rows="5" placeholder="e.g.&#10;7 5 3&#10;3 2 2&#10;9 0 2"></textarea>
+
+  <label>Allocation Matrix:</label>
+  <textarea id="allocation" rows="5" placeholder="e.g.&#10;0 1 0&#10;2 0 0&#10;3 0 2"></textarea>
+
+  <button onclick="checkSafeState()">Check Safe State</button>
+
+  <h2>Result</h2>
+  <pre id="result"></pre>
+
+  <script>
+    function parseMatrix(str) {
+      return str.trim().split('\n').map(row => row.trim().split(/\s+/).map(Number));
+    }
+
+    function parseVector(str) {
+      return str.trim().split(/\s+/).map(Number);
+    }
+
+    function checkSafeState() {
+      const available = parseVector(document.getElementById("available").value);
+      const max = parseMatrix(document.getElementById("max").value);
+      const alloc = parseMatrix(document.getElementById("allocation").value);
+
+      const n = alloc.length; // processes
+      const m = available.length; // resources
+
+      const need = Array.from({ length: n }, (_, i) =>
+        max[i].map((val, j) => val - alloc[i][j])
+      );
+
+      const work = [...available];
+      const finish = Array(n).fill(false);
+      const safeSeq = [];
+
+      let changed;
+      do {
+        changed = false;
+        for (let i = 0; i < n; i++) {
+          if (!finish[i] && need[i].every((needVal, j) => needVal <= work[j])) {
+            for (let j = 0; j < m; j++) {
+              work[j] += alloc[i][j];
+            }
+            finish[i] = true;
+            safeSeq.push(i);
+            changed = true;
+          }
+        }
+      } while (changed);
+
+      const result = document.getElementById("result");
+      if (finish.every(f => f)) {
+        result.textContent = `✅ System is in a SAFE state.\nSafe Sequence: ${safeSeq.join(" → ")}`;
+      } else {
+        result.textContent = "❌ System is NOT in a safe state.";
+      }
+    }
+  </script>
+
+</body>
+</html>
